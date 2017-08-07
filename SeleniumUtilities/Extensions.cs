@@ -214,6 +214,38 @@ namespace SeleniumUtilities
             return elements.SelectArrayParallelList(element => element.Text);
         }
 
+        /// <summary>
+        /// Returns the proper and displayed version of the given url, with an http(s) beginning and a slash ending
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="https"></param>
+        /// <returns></returns>
+        [Pure]
+        public static string NormalizeUrl(this string url, bool https = false)
+        {
+            var returnedUrl = url;
+            if (!url.StartsWith("http"))
+            {
+                returnedUrl = (https ? "https://" : "http://") + returnedUrl;
+            }
+            if (!url.EndsWith("/"))
+            {
+                returnedUrl += "/";
+            }
+            return returnedUrl;
+        }
+
+        /// <summary>
+        /// Returns the frame element containing the current window, or null if the current window is top-level
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <returns></returns>
+        public static IWebElement GetFrameElement(this IWebDriver driver)
+        {
+            object frameElement = ((IJavaScriptExecutor)driver).ExecuteScript("return window.frameElement");
+            return frameElement == null ? null : (IWebElement)frameElement;
+        }
+
         #endregion
     }
 }
