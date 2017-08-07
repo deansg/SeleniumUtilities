@@ -217,9 +217,9 @@ namespace SeleniumUtilities
         /// <summary>
         /// Returns the proper and displayed version of the given url, with an http(s) beginning and a slash ending
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="https"></param>
-        /// <returns></returns>
+        /// <param name="url">The url to expand</param>
+        /// <param name="https">Whether the url should start with http or https</param>
+        /// <returns>The final expanded version of the url</returns>
         [Pure]
         public static string NormalizeUrl(this string url, bool https = false)
         {
@@ -238,12 +238,71 @@ namespace SeleniumUtilities
         /// <summary>
         /// Returns the frame element containing the current window, or null if the current window is top-level
         /// </summary>
-        /// <param name="driver"></param>
+        /// <param name="driver">The driver representing the current window</param>
         /// <returns></returns>
         public static IWebElement GetFrameElement(this IWebDriver driver)
         {
             object frameElement = ((IJavaScriptExecutor)driver).ExecuteScript("return window.frameElement");
             return frameElement == null ? null : (IWebElement)frameElement;
+        }
+
+        /// <summary>
+        /// Finds the first OpenQa.Selenium.IWebElement using the given method, or returns null if none are found
+        /// </summary>
+        /// <param name="searchContext">Search context used to search for the IWebElement</param>
+        /// <param name="by">The locating mechanism to use</param>
+        /// <returns>The first IWebElement found or null if none are found</returns>
+        public static IWebElement FindFirstOrDefault(this ISearchContext searchContext, By by)
+        {
+            IReadOnlyList<IWebElement> elements = searchContext.FindElements(by);
+            return elements.Count > 0 ? elements[0] : null;
+        }
+
+        /// <summary>
+        /// Finds the only OpenQA.Selenium.IWebElement using the given method or throws an InvalidOperationsException 
+        /// if there isn't exactly one element
+        /// </summary>
+        /// <param name="searchContext">Search context used to search for the IWebElement</param>
+        /// <param name="by">The locating mechanism to use</param>
+        /// <returns>The only element found</returns>
+        /// <exception cref="InvalidOperationException">In case more than one element was found</exception>
+        /// <exception cref="NoSuchElementException">In case no elements were found</exception>
+        public static IWebElement FindSingle(this ISearchContext searchContext, By by)
+        {
+            IReadOnlyList<IWebElement> elements = searchContext.FindElements(by);
+            if (elements.Count == 0)
+            {
+                throw new NoSuchElementException("No elements were found using " + by);
+            }
+            AssertUpToOneElementWasFound(elements, by);
+            return elements[0];
+        }
+
+        /// <summary>
+        /// Finds the only OpenQA.Selenium.IWebElement using the given method or returns null if there are none or
+        /// throws an InvalidOperationsException if there is more than one element
+        /// </summary>
+        /// <param name="searchContext">Search context used to search for the IWebElement</param>
+        /// <param name="by">The locating mechanism to use</param>
+        /// <returns>The only element found</returns>
+        /// <exception cref="InvalidOperationException">In case more than one element was found</exception>
+        public static IWebElement FindSingleOrDefault(this ISearchContext searchContext, By by)
+        {
+            IReadOnlyList<IWebElement> elements = searchContext.FindElements(by);
+            AssertUpToOneElementWasFound(elements, by);
+            return elements.Count > 0 ? elements[0] : null;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static void AssertUpToOneElementWasFound(IReadOnlyList<IWebElement> elements, By by)
+        {
+            if (elements.Count > 1)
+            {
+                throw new InvalidOperationException("More than one element was found using " + by);
+            }
         }
 
         #endregion
