@@ -51,6 +51,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WaitUntil.cs" />
+    <Compile Include="WebsiteWrapperBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
