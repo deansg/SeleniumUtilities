@@ -47,8 +47,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DriverUser.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WaitUntil.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

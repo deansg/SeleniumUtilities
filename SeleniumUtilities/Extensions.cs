@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace SeleniumUtilities
 {
+    /// <summary>
+    /// Contains several extension methods particularly useful with Selenium WebDriver
+    /// </summary>
     public static class Extensions
     {
         #region Public Methods
