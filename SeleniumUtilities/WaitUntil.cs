@@ -85,6 +85,39 @@ namespace SeleniumUtilities
             new WebDriverWait(_driver, timeout).Until(dr => dr.FindElements(by).Count == 0);
         }
 
+        /// <summary>
+        /// Waits until an element satisfying the given By condition exists and is visible
+        /// </summary>
+        /// <param name="by">Used to search for the element</param>
+        /// <param name="timeout">Maximum timeout for the operation</param>
+        /// <returns>The element, once it is found</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public IWebElement ElementIsVisible(By by, TimeSpan timeout = default(TimeSpan))
+        {
+            SetTimeout(ref timeout);
+            return new WebDriverWait(_driver, timeout).Until(ExpectedConditions.ElementIsVisible(by));
+        }
+
+        /// <summary>
+        /// Waits until the IWebDriver's url satisfies the given condition
+        /// </summary>
+        /// <param name="urlPredicate">The predicate to be run against the current URL</param>
+        /// <param name="timeout">Maximum timeout for the operation</param>
+        /// <returns>The url satisfying the given condition</returns>
+        public string UrlSatisfiesCondition(Func<string, bool> urlPredicate, TimeSpan timeout = default(TimeSpan))
+        {
+            SetTimeout(ref timeout);
+            return new WebDriverWait(_driver, timeout).Until(dr =>
+            {
+                string url = dr.Url;
+
+                // returning the url will always terminate the wait as driver.url cannot be null
+                if (urlPredicate(url))
+                    return url;
+                return null;
+            });
+        }
+
         #endregion
 
         #region Private Methods
