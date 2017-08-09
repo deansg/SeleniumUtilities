@@ -250,6 +250,16 @@ namespace SeleniumUtilities
         }
 
         /// <summary>
+        /// Returns the classes of the current element
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns>The classes of the current element</returns>
+        public static string[] GetClasses(this IWebElement element)
+        {
+            return element.GetAttribute("class").Split(' ');
+        }
+
+        /// <summary>
         /// Finds the first OpenQa.Selenium.IWebElement using the given method, or returns null if none are found
         /// </summary>
         /// <param name="searchContext">Search context used to search for the IWebElement</param>

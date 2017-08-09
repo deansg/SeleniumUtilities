@@ -16,7 +16,7 @@ namespace SeleniumUtilities
     public class WaitUntil
     {
         #region Static Constructor
-        
+
         static WaitUntil()
         {
             DefaultTimeout = TimeSpan.FromSeconds(20);
@@ -189,7 +189,7 @@ namespace SeleniumUtilities
         /// <param name="timeout">Maximal timeout for the operation</param>
         /// <returns>The newly found element</returns>
         /// <exception cref="WebDriverTimeoutException"/>
-        public static IWebElement ElementExists(ISearchContext searchContext, By by, 
+        public static IWebElement ElementExists(ISearchContext searchContext, By by,
             TimeSpan timeout = default(TimeSpan))
         {
             SetTimeout(ref timeout);
@@ -220,7 +220,7 @@ namespace SeleniumUtilities
         /// <param name="timeout">Maximal timeout for the operation</param>
         /// <returns>The newly found elements</returns>
         /// <exception cref="WebDriverTimeoutException"/>
-        public static IReadOnlyList<IWebElement> ElementsExist(ISearchContext searchContext, By by, 
+        public static IReadOnlyList<IWebElement> ElementsExist(ISearchContext searchContext, By by,
             TimeSpan timeout = default(TimeSpan))
         {
             SetTimeout(ref timeout);
@@ -272,7 +272,7 @@ namespace SeleniumUtilities
         }
 
         /// <summary>
-        /// Waits until the element's "displayed" property is true
+        /// Waits until the element's "Displayed" property is true
         /// </summary>
         /// <param name="element">The inspected element</param>
         /// <param name="timeout">Maximal timeout for the operation</param>
@@ -284,7 +284,7 @@ namespace SeleniumUtilities
         }
 
         /// <summary>
-        /// Waits until the element's "displayed" property is false
+        /// Waits until the element's "Displayed" property is false
         /// </summary>
         /// <param name="element">The inspected element</param>
         /// <param name="timeout">Maximal timeout for the operation</param>
@@ -295,6 +295,107 @@ namespace SeleniumUtilities
             return ElementSatisfiesCondition(element, "Element is still displayed", e => !e.Displayed, timeout);
         }
 
+        /// <summary>
+        /// Waits until the element's "Enabled" property is true
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementIsEnabled(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element wasn't enabled", e => e.Enabled, timeout);
+        }
+
+        /// <summary>
+        /// Waits until the element's "Enabled" property is false
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementIsDisabled(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element is still enabled", e => !e.Enabled, timeout);
+        }
+
+        /// <summary>
+        /// Waits until the element has the given class name
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="className">The class name to search for in the element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementHasClass(IWebElement element, string className,
+            TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element still does not have class " + className,
+                e => e.GetClasses().Contains(className), timeout);
+        }
+
+        /// <summary>
+        /// Waits until the element does not have the given class name
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="className">The class name to search for in the element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementDoesNotHaveClass(IWebElement element, string className,
+            TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element still has class " + className,
+                e => !e.GetClasses().Contains(className), timeout);
+        }
+
+        /// <summary>
+        /// Waits until the given element has a given expected value for a given CSS property
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="cssProperty">The CSS property to test</param>
+        /// <param name="expectedValue">The expected value of the given CSS property</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementHasCSSValue(IWebElement element, string cssProperty, string expectedValue,
+            TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element,
+                $"Element's {cssProperty} CSS property still doesn't have value {expectedValue}",
+                e => e.GetCssValue(cssProperty) == expectedValue, timeout);
+        }
+
+        /// <summary>
+        /// Waits until the given element has the value "visible" in its "overflow" property (common use case with 
+        /// elements that are expanded)
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementOverflowIsVisible(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementHasCSSValue(element, "overflow", "visible", timeout);
+        }
+
+        /// <summary>
+        /// Waits until the given element satisfies the given predicate
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="predicate">The predicate to run against the element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementSatisfiesCondition(IWebElement element, Func<IWebElement, bool> predicate,
+            TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element didn't satisfy the given predicate", predicate, 
+                timeout);
+        }
+
+
+
         #endregion
 
         #region Private Methods
@@ -304,7 +405,7 @@ namespace SeleniumUtilities
             timeout = timeout == default(TimeSpan) ? DefaultTimeout : timeout;
         }
 
-        private static IWebElement ElementSatisfiesCondition(IWebElement element, string failureMessage, 
+        private static IWebElement ElementSatisfiesCondition(IWebElement element, string failureMessage,
             Func<IWebElement, bool> predicate, TimeSpan timeout = default(TimeSpan))
         {
             SetTimeout(ref timeout);
