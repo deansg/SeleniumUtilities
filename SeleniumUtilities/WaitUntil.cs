@@ -156,6 +156,65 @@ namespace SeleniumUtilities
 
         #endregion
 
+        #region Public Static Methods
+
+        /// <summary>
+        /// Waits until the given element becomes stale
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static void ElementIsStale(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            SetTimeout(ref timeout);
+            ElementSatisfiesCondition(element, "Element didn't become stale", el =>
+            {
+                try
+                {
+                    el.GetAttribute("id");
+                    return false;
+                }
+                catch (StaleElementReferenceException)
+                {
+                    return true;
+                }
+            });
+        }
+
+        /// <summary>
+        /// Waits until an element is found using the given search contet and by objects
+        /// </summary>
+        /// <param name="searchContext">The search context used to search for the element</param>
+        /// <param name="by">The By object used to search for the element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The newly found element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementExists(ISearchContext searchContext, By by, TimeSpan timeout = default(TimeSpan))
+        {
+            SetTimeout(ref timeout);
+            var sw = Stopwatch.StartNew();
+            bool isFirstSearch = true;
+            IWebElement returnedElement;
+            do
+            {
+                if (!isFirstSearch)
+                    Thread.Sleep(PollingInterval);
+                returnedElement = searchContext.FindElements(by).FirstOrDefault();
+                if (isFirstSearch)
+                    isFirstSearch = false;
+            } while (returnedElement == null && sw.Elapsed < timeout);
+            if (returnedElement == null)
+            {
+                throw new WebDriverTimeoutException(
+                    $"Element coudln't be found using by {by} after {timeout.TotalSeconds}");
+            }
+            return returnedElement;
+        }
+
+
+
+        #endregion
+
         #region Private Methods
 
         private static void SetTimeout(ref TimeSpan timeout)
