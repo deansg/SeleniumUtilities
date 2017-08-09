@@ -3,6 +3,7 @@ using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -390,11 +391,88 @@ namespace SeleniumUtilities
         public static IWebElement ElementSatisfiesCondition(IWebElement element, Func<IWebElement, bool> predicate,
             TimeSpan timeout = default(TimeSpan))
         {
-            return ElementSatisfiesCondition(element, "Element didn't satisfy the given predicate", predicate, 
+            return ElementSatisfiesCondition(element, "Element didn't satisfy the given predicate", predicate,
                 timeout);
         }
 
+        /// <summary>
+        /// Waits until the given element's position starts changing
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <param name="pollingInterval">The interval between two consecutive inspections of the element's location. Default is 500 milliseconds</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementStartsMoving(IWebElement element, TimeSpan timeout = default(TimeSpan),
+            TimeSpan pollingInterval = default(TimeSpan))
+        {
+            return ElementSatisfiesPositionPredicate(element, (pos1, pos2) => !pos1.Equals(pos2), timeout,
+                pollingInterval, (pos1, pos2) =>
+                    $"Element is still for {timeout.TotalSeconds} seconds at position {pos2}");
+        }
 
+        /// <summary>
+        /// Waits until the given element's position does not seem to change anymore
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <param name="pollingInterval">The interval between two consecutive inspections of the element's location. Default is 500 milliseconds</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementStopsMoving(IWebElement element, TimeSpan timeout = default(TimeSpan),
+            TimeSpan pollingInterval = default(TimeSpan))
+        {
+            return ElementSatisfiesPositionPredicate(element, (pos1, pos2) => pos1.Equals(pos2), timeout,
+                pollingInterval, (pos1, pos2) =>
+                    $"Element is still moving after {timeout.TotalSeconds} seconds. Latest position is {pos2}");
+        }
+
+        /// <summary>
+        /// Waits until the given element's size starts changing
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <param name="pollingInterval">The interval between two consecutive inspections of the element's size. Default is 500 milliseconds</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementStartsResizing(IWebElement element, TimeSpan timeout = default(TimeSpan),
+            TimeSpan pollingInterval = default(TimeSpan))
+        {
+            return ElementSatisfiesSizePredicate(element, (size1, size2) => !size1.Equals(size2), timeout,
+                pollingInterval, (size1, size2) =>
+                    $"Element maintained size {size1} for {timeout.TotalSeconds} seconds");
+        }
+
+        /// <summary>
+        /// Waits until the given element's size stops changing
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <param name="pollingInterval">The interval between two consecutive inspections of the element's size. Default is 500 milliseconds</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementStopsResizing(IWebElement element, TimeSpan timeout = default(TimeSpan),
+            TimeSpan pollingInterval = default(TimeSpan))
+        {
+            return ElementSatisfiesSizePredicate(element, (size1, size2) => size1.Equals(size2), timeout,
+                pollingInterval, (size1, size2) =>
+                    $"Element kept changing size for {timeout.TotalSeconds} seconds. Latest size is {size2}");
+        }
+
+        /// <summary>
+        /// Waits until the element has non-zero width and length
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        public static IWebElement ElementHasSize(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element still has zero size", e =>
+            {
+                Size size = e.Size;
+                return size.Height * size.Width != 0;
+            }, timeout);
+        }
 
         #endregion
 
@@ -417,6 +495,44 @@ namespace SeleniumUtilities
                 Thread.Sleep(PollingInterval);
             }
             throw new WebDriverTimeoutException($"{failureMessage} after a timeout of {timeout.TotalSeconds} seconds");
+        }
+
+        private static IWebElement ElementSatisfiesChangingPropertyPredicate<T>(IWebElement element,
+            Func<IWebElement, T> getProperty, Func<T, T, bool> propertyPredicate, TimeSpan timeout, 
+            TimeSpan pollingInterval, Func<T, T, string> getFailureMessage)
+        {
+            SetTimeout(ref timeout);
+            pollingInterval = pollingInterval == default(TimeSpan) ? TimeSpan.FromMilliseconds(500) : pollingInterval;
+            T initialVal;
+            T secondVal = getProperty(element);
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            do
+            {
+                initialVal = secondVal;
+                Thread.Sleep(pollingInterval);
+                secondVal = getProperty(element);
+            } while (!propertyPredicate(initialVal, secondVal) && stopwatch.Elapsed < timeout);
+            if (!propertyPredicate(initialVal, secondVal))
+            {
+                throw new WebDriverTimeoutException(getFailureMessage(initialVal, secondVal));
+            }
+            return element;
+        }
+
+        private static IWebElement ElementSatisfiesPositionPredicate(IWebElement element,
+            Func<Point, Point, bool> positionPredicate, TimeSpan timeout, TimeSpan pollingInterval, 
+            Func<Point, Point, string> getFailureMessage)
+        {
+            return ElementSatisfiesChangingPropertyPredicate(element, e => e.Location, positionPredicate, timeout,
+                pollingInterval, getFailureMessage);
+        }
+
+        private static IWebElement ElementSatisfiesSizePredicate(IWebElement element,
+            Func<Size, Size, bool> positionPredicate, TimeSpan timeout, TimeSpan pollingInterval, 
+            Func<Size, Size, string> getFailureMessage)
+        {
+            return ElementSatisfiesChangingPropertyPredicate(element, e => e.Size, positionPredicate, timeout,
+                pollingInterval, getFailureMessage);
         }
 
         #endregion
