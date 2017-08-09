@@ -189,7 +189,8 @@ namespace SeleniumUtilities
         /// <param name="timeout">Maximal timeout for the operation</param>
         /// <returns>The newly found element</returns>
         /// <exception cref="WebDriverTimeoutException"/>
-        public static IWebElement ElementExists(ISearchContext searchContext, By by, TimeSpan timeout = default(TimeSpan))
+        public static IWebElement ElementExists(ISearchContext searchContext, By by, 
+            TimeSpan timeout = default(TimeSpan))
         {
             SetTimeout(ref timeout);
             var sw = Stopwatch.StartNew();
@@ -211,7 +212,88 @@ namespace SeleniumUtilities
             return returnedElement;
         }
 
+        /// <summary>
+        /// Waits until some elements are found using the given search contet and by objects
+        /// </summary>
+        /// <param name="searchContext">The search context used to search for the elements</param>
+        /// <param name="by">The By object used to search for the elements</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The newly found elements</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IReadOnlyList<IWebElement> ElementsExist(ISearchContext searchContext, By by, 
+            TimeSpan timeout = default(TimeSpan))
+        {
+            SetTimeout(ref timeout);
+            var sw = Stopwatch.StartNew();
+            bool isFirstSearch = true;
+            IReadOnlyList<IWebElement> returnedElements;
+            do
+            {
+                if (!isFirstSearch)
+                    Thread.Sleep(PollingInterval);
+                returnedElements = searchContext.FindElements(by);
+                if (isFirstSearch)
+                    isFirstSearch = false;
+            } while (returnedElements.Count == 0 && sw.Elapsed < timeout);
+            if (returnedElements.Count == 0)
+            {
+                throw new WebDriverTimeoutException(
+                    $"Elements coudln't be found using by {by} after {timeout.TotalSeconds}");
+            }
+            return returnedElements;
+        }
 
+        /// <summary>
+        /// Waits until no elements are found using the given search contet and by objects
+        /// </summary>
+        /// <param name="searchContext">The search context used to search for the elements</param>
+        /// <param name="by">The By object used to search for the elements</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static void NoElementsExist(ISearchContext searchContext, By by, TimeSpan timeout = default(TimeSpan))
+        {
+            SetTimeout(ref timeout);
+            var sw = Stopwatch.StartNew();
+            bool isFirstSearch = true;
+            IReadOnlyList<IWebElement> elements;
+            do
+            {
+                if (!isFirstSearch)
+                    Thread.Sleep(PollingInterval);
+                elements = searchContext.FindElements(by);
+                if (isFirstSearch)
+                    isFirstSearch = false;
+            } while (elements.Count > 0 && sw.Elapsed < timeout);
+            if (elements.Count > 0)
+            {
+                throw new WebDriverTimeoutException(
+                    $"Elements are still found using by {by} after {timeout.TotalSeconds}");
+            }
+        }
+
+        /// <summary>
+        /// Waits until the element's "displayed" property is true
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementIsDisplayed(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element wasn't displayed", e => e.Displayed, timeout);
+        }
+
+        /// <summary>
+        /// Waits until the element's "displayed" property is false
+        /// </summary>
+        /// <param name="element">The inspected element</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The given element</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public static IWebElement ElementIsUndisplayed(IWebElement element, TimeSpan timeout = default(TimeSpan))
+        {
+            return ElementSatisfiesCondition(element, "Element is still displayed", e => !e.Displayed, timeout);
+        }
 
         #endregion
 
