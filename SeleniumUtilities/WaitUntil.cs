@@ -64,7 +64,7 @@ namespace SeleniumUtilities
         /// Waits until an element satisfying the given By condition exists
         /// </summary>
         /// <param name="by">Used to search for the element</param>
-        /// <param name="timeout">Maximum timeout for the operation</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
         /// <returns>The element, once it is found</returns>
         /// <exception cref="WebDriverTimeoutException"/>
         public IWebElement ElementExists(By by, TimeSpan timeout = default(TimeSpan))
@@ -77,7 +77,7 @@ namespace SeleniumUtilities
         /// Waits until no element satisfies the given By condition
         /// </summary>
         /// <param name="by">Used to search for elements</param>
-        /// <param name="timeout">Maximum timeout for the operation</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
         /// <exception cref="WebDriverTimeoutException"/>
         public void ElementDoesNotExist(By by, TimeSpan timeout = default(TimeSpan))
         {
@@ -89,7 +89,7 @@ namespace SeleniumUtilities
         /// Waits until an element satisfying the given By condition exists and is visible
         /// </summary>
         /// <param name="by">Used to search for the element</param>
-        /// <param name="timeout">Maximum timeout for the operation</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
         /// <returns>The element, once it is found</returns>
         /// <exception cref="WebDriverTimeoutException"/>
         public IWebElement ElementIsVisible(By by, TimeSpan timeout = default(TimeSpan))
@@ -102,8 +102,9 @@ namespace SeleniumUtilities
         /// Waits until the IWebDriver's url satisfies the given condition
         /// </summary>
         /// <param name="urlPredicate">The predicate to be run against the current URL</param>
-        /// <param name="timeout">Maximum timeout for the operation</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
         /// <returns>The url satisfying the given condition</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
         public string UrlSatisfiesCondition(Func<string, bool> urlPredicate, TimeSpan timeout = default(TimeSpan))
         {
             SetTimeout(ref timeout);
@@ -116,6 +117,41 @@ namespace SeleniumUtilities
                     return url;
                 return null;
             });
+        }
+
+        /// <summary>
+        /// Waits until the url is not empty. Particularly useful when switching to a newly opened tab.
+        /// </summary>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The non-empty url</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public string UrlIsNotEmpty(TimeSpan timeout = default(TimeSpan))
+        {
+            return UrlSatisfiesCondition(url => !string.IsNullOrEmpty(url));
+        }
+
+        /// <summary>
+        /// Waits until the url is equal to the expected url
+        /// </summary>
+        /// <param name="expectedUrl">The expected url</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The expected url</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public string UrlEquals(string expectedUrl, TimeSpan timeout = default(TimeSpan))
+        {
+            return UrlSatisfiesCondition(url => url == expectedUrl);
+        }
+
+        /// <summary>
+        /// Waits until the url starts with the given prefix
+        /// </summary>
+        /// <param name="expectedUrlPrefix">The expected prefix of the url</param>
+        /// <param name="timeout">Maximal timeout for the operation</param>
+        /// <returns>The final url</returns>
+        /// <exception cref="WebDriverTimeoutException"/>
+        public string UrlStartsWith(string expectedUrlPrefix, TimeSpan timeout = default(TimeSpan))
+        {
+            return UrlSatisfiesCondition(url => url.StartsWith(expectedUrlPrefix));
         }
 
         #endregion
