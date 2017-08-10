@@ -50,6 +50,7 @@
     <Compile Include="DriverUser.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SearchInformation.cs" />
     <Compile Include="WaitUntil.cs" />
     <Compile Include="WebsiteWrapperBase.cs" />
   </ItemGroup>
