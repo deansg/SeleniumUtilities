@@ -9,6 +9,10 @@ namespace SeleniumUtilities
     /// </summary>
     public abstract class WebsiteWrapperBase : DriverUser, IDisposable
     {
+        /// <summary>
+        /// Creates a new instance of the WebsiteWrapperBase class based on the given IWebDriver
+        /// </summary>
+        /// <param name="driver">The IWebDriver instance to use</param>
         protected WebsiteWrapperBase(IWebDriver driver) : base(driver)
         {
         }
