@@ -190,7 +190,7 @@ namespace SeleniumUtilities
         /// <param name="elements"></param>
         /// <returns></returns>
         [Pure]
-        public static IReadOnlyList<string> Texts(this IList<IWebElement> elements)
+        public static IReadOnlyList<string> TextsList(this IList<IWebElement> elements)
         {
             return elements.SelectArrayList(element => element.Text);
         }
